@@ -39,7 +39,7 @@ parser.add_argument('--tau', type=float, help='The value of frac-and-boundary.')
 
 #training settings
 parser.add_argument('--batch_size', type=int, help='training batch size.')
-parser.add_argument('--device', type=str, default='cpu')
+parser.add_argument('--device', type=str, default='cuda:0')
 parser.add_argument('--data_size', type=int, help='The number of all instances.')
 parser.add_argument('--lr', type=float, help='Learning rate.')
 parser.add_argument('--num_epoch', type=int, help='The number of training epochs.')
@@ -321,7 +321,7 @@ if not args.test:
                 delta_zu = train_y[:,train_data.num_var+2*train_data.num_ineq+train_data.num_eq+train_data.num_lb:,:]
                 alpha_x, alpha_eta, alpha_s, alpha_zl, alpha_zu = calculate_step(train_data, train_x, delta_x, train_eta, delta_eta, train_s,
                                                                                  delta_s, train_zl, delta_zl, train_zu, delta_zu, train_lb,
-                                                                                 train_ub, args.tau, args.use_line_search, device='cpu')
+                                                                                 train_ub, args.tau, args.use_line_search, device='cuda:0')
 
                 #update primal and dual variables
                 if (train_data.num_lb != 0) or (train_data.num_ub != 0):
@@ -427,7 +427,7 @@ if not args.test:
                 alpha_x, alpha_eta, alpha_s, alpha_zl, alpha_zu = calculate_step(val_data, val_x, delta_x, val_eta, delta_eta,
                                                                                 val_s, delta_s, val_zl, delta_zl, val_zu,
                                                                                 delta_zu, val_data.lb, val_data.ub, args.tau,
-                                                                                args.use_line_search, device='cpu')
+                                                                                args.use_line_search, device='cuda:0')
 
 
                 # update primal and dual variables
@@ -588,7 +588,7 @@ elif args.test:
             alpha_x, alpha_eta, alpha_s, alpha_zl, alpha_zu = calculate_step(test_data, test_x, delta_x, test_eta, delta_eta,
                                                                              test_s, delta_s, test_zl, delta_zl, test_zu,
                                                                              delta_zu, test_data.lb, test_data.ub, args.tau,
-                                                                             args.use_line_search, device='cpu')
+                                                                             args.use_line_search, device='cuda:0')
 
             # update primal and dual variables
             if (test_data.num_lb != 0) or (test_data.num_ub != 0):

@@ -25,7 +25,7 @@ class QP(object):
         A: [batch_size, num_eq, num_var]
         b: [batch_size, num_eq, 1]
     """
-    def __init__(self, prob_type, learning_type, val_frac=0.0833, test_frac=0.0833, device='cpu', seed=17, **kwargs):
+    def __init__(self, prob_type, learning_type, val_frac=0.0833, test_frac=0.0833, device='cuda:0', seed=17, **kwargs):
         super().__init__()
 
         self.device = device

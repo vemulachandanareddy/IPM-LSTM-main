@@ -17,7 +17,7 @@ tau: 0.999
 use_line_search: False
 
 batch_size: 128
-device: 'cpu'
+device: 'cuda:0'
 lr: 0.0001
 num_epoch: 50
 inner_T: 50
