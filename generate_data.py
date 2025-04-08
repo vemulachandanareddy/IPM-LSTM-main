@@ -32,7 +32,7 @@ if args.prob_type == 'Convex_QP_RHS':
                int(70*(args.num_var/100)), int(90*(args.num_var/100))]
     for num_eq in num_eqs:
         mat_name = "dc3_{}_{}_{}_{}".format(args.num_var, num_ineq, num_eq, args.data_size)
-        file_path = os.path.join('mnt','nvme0n1p3','IPM-LSTM-main','datasets', 'qp', "{}".format(mat_name))
+        file_path = os.path.join('datasets', 'qp', "{}".format(mat_name))
         np.random.seed(17)
         Q = np.diag(np.random.random(args.num_var))
         p = np.random.random(args.num_var)
@@ -55,7 +55,7 @@ if args.prob_type == 'Convex_QP_RHS':
                  int(70*(args.num_var/100)), int(90*(args.num_var/100))]
     for num_ineq in num_ineqs:
         mat_name = "dc3_{}_{}_{}_{}".format(args.num_var, num_ineq, num_eq, args.data_size)
-        file_path = os.path.join('mnt','nvme0n1p3','IPM-LSTM-main','datasets', 'qp', "{}.mat".format(mat_name))
+        file_path = os.path.join('datasets', 'qp', "{}.mat".format(mat_name))
         np.random.seed(17)
         Q = np.diag(np.random.random(args.num_var))
         p = np.random.random(args.num_var)
@@ -93,7 +93,7 @@ elif args.prob_type == 'Nonconvex_Program_RHS':
     h = np.sum(np.abs(G @ np.linalg.pinv(A)), axis=1)
 
     mat_name = "random_nonconvex_dataset_var{}_ineq{}_eq{}_ex{}".format(args.num_var, args.num_ineq, args.num_eq, args.data_size)
-    file_path = os.path.join('mnt','nvme0n1p3','IPM-LSTM-main','datasets', 'nonconvex_program', "{}.mat".format(mat_name))
+    file_path = os.path.join('datasets', 'nonconvex_program', "{}.mat".format(mat_name))
 
     sio.savemat(file_path,
                 {'Q': np.repeat(np.expand_dims(Q, axis=0), args.data_size, axis=0),
@@ -129,14 +129,14 @@ elif args.prob_type == 'Convex_QCQP_RHS':
                                                                           args.num_ineq,
                                                                           args.num_eq,
                                                                           args.data_size)
-    file_path = os.path.join('mnt','nvme0n1p3','IPM-LSTM-main','datasets', 'convex_qcqp', "{}.mat".format(mat_name))
+    file_path = os.path.join('datasets', 'convex_qcqp', "{}.mat".format(mat_name))
     sio.savemat(file_path, data)
 elif args.prob_type == 'Nonconvex_QP':
     """
     Globally solving nonconvex quadratic programming problems via completely positive programming
     """
     if (args.mat_name == 'qp1') or (args.mat_name == 'qp2'):
-        load_path = os.path.join('mnt','nvme0n1p3','IPM-LSTM-main','datasets', 'qp', 'nonconvex_qp', '{}.mat'.format(args.mat_name))
+        load_path = os.path.join('datasets', 'qp', 'nonconvex_qp', '{}.mat'.format(args.mat_name))
         data = sio.loadmat(load_path)
         np.random.seed(17)
         Q = []
@@ -183,11 +183,11 @@ elif args.prob_type == 'Nonconvex_QP':
                      'G': np.array(G), 'c': np.array(c),
                      'A':np.array(A), 'b':np.array(b),
                      'lb': np.array(lb)}
-        file_path = os.path.join('mnt','nvme0n1p3','IPM-LSTM-main','datasets', 'qp', "{}.mat".format(args.mat_name))
+        file_path = os.path.join('datasets', 'qp', "{}.mat".format(args.mat_name))
         sio.savemat(file_path, glob_dict)
 
     elif (args.mat_name == 'st_rv1') or (args.mat_name == 'st_rv2') or (args.mat_name == 'st_rv3') or (args.mat_name == 'st_rv7') or (args.mat_name == 'st_rv9'):
-        load_path = os.path.join('mnt','nvme0n1p3','IPM-LSTM-main','datasets', 'qp', 'nonconvex_qp', '{}.mat'.format(args.mat_name))
+        load_path = os.path.join('datasets', 'qp', 'nonconvex_qp', '{}.mat'.format(args.mat_name))
         data = sio.loadmat(load_path)
         np.random.seed(17)
         Q = []
@@ -232,11 +232,11 @@ elif args.prob_type == 'Nonconvex_QP':
         glob_dict = {'Q': np.array(Q), 'p': np.array(p),
                      'G': np.array(G), 'c': np.array(c),
                      'lb': np.array(lb)}
-        file_path = os.path.join('mnt','nvme0n1p3','IPM-LSTM-main','datasets', 'qp', "{}.mat".format(args.mat_name))
+        file_path = os.path.join('datasets', 'qp', "{}.mat".format(args.mat_name))
         sio.savemat(file_path, glob_dict)
 
     elif args.mat_name == 'qp30_15_1_1':
-        load_path = os.path.join('mnt','nvme0n1p3','IPM-LSTM-main','datasets/qp/nonconvex_qp', '{}.mat'.format(args.mat_name))
+        load_path = os.path.join('datasets/qp/nonconvex_qp', '{}.mat'.format(args.mat_name))
         data = sio.loadmat(load_path)
         np.random.seed(17)
         Q = []
@@ -302,7 +302,7 @@ elif args.prob_type == 'Nonconvex_QP':
                      'G': np.array(G), 'c': np.array(c),
                      'A': np.array(A), 'b': np.array(b),
                      'lb': np.array(lb)}
-        file_path = os.path.join('mnt','nvme0n1p3','IPM-LSTM-main','datasets', 'qp', "{}.mat".format(args.mat_name))
+        file_path = os.path.join('datasets', 'qp', "{}.mat".format(args.mat_name))
         sio.savemat(file_path, rand_dict)
 
 
