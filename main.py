@@ -486,7 +486,9 @@ if not args.test:
             print("Epoch : {} | Train_Max_Lb : {:.3f} | Train_Mean_Lb : {:.3f} | Val_Max_Lb : {:.3f} | Val_Mean_Lb : {:.3f} |".format(epoch, train_lb_vio_max, train_lb_vio_mean, val_lb_vio_max, val_lb_vio_mean))
         if val_data.num_ub != 0:
             print("Epoch : {} | Train_Max_Ub : {:.3f} | Train_Mean_Ub : {:.3f} | Val_Max_Ub : {:.3f} | Val_Mean_Ub : {:.3f} |".format(epoch, train_ub_vio_max, train_ub_vio_mean, val_ub_vio_max, val_ub_vio_mean))
-
+        if epoch == args.num_epoch - 1:
+            torch.save(model.state_dict(), save_path)
+            print("Model saved at final epoch:", epoch + 1)
         if early_stop:
             break
 

@@ -22,7 +22,7 @@ class LSTM(nn.Module):
         # Instantiate a self-attention layer.
         # Here, we assume input_dim equals the concatenated dimension of [y, grad].
         # For a small input_dim (e.g. 2), one head is sufficient.
-        self.attention = SelfAttention(embed_dim=input_dim, num_heads=1)
+        self.attention = SelfAttention(embed_dim=input_dim, num_heads=1).to(self.device)
 
         self.W_i = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device), requires_grad=True)
         self.U_i = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device), requires_grad=True)

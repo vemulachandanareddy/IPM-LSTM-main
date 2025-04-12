@@ -11,13 +11,13 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 class Convex_QCQP(object):
 
-    def __init__(self, prob_type, learning_type, val_frac=0.0833, test_frac=0.0833, device='cuda:0', seed=17, **kwargs):
+    def __init__(self, prob_type, learning_type, val_frac=0.001, test_frac=0.001, train_frac=0.01, device='cuda:0', seed=17, **kwargs):
         super().__init__()
 
         self.device = device
         self.seed = seed
         self.learning_type = learning_type
-        self.train_frac = 1 - val_frac - test_frac
+        self.train_frac = train_frac
         self.val_frac = val_frac
         self.test_frac = test_frac
 
@@ -29,7 +29,7 @@ class Convex_QCQP(object):
 
             self.train_size = int(self.data_size * self.train_frac)
             self.val_size = int(self.data_size * val_frac)
-            self.test_size = self.data_size - self.train_size - self.val_size
+            self.test_size = int(self.data_size * test_frac)
             torch.manual_seed(self.seed)
 
             self.num_var = data['Q'].shape[0]
