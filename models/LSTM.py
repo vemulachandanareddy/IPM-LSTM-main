@@ -3,84 +3,128 @@ import torch.nn as nn
 from models.selfattention import SelfAttention  # Import our self-attention module
 
 """
-model inputs: optimizees
-model outputs: [X_1, X_2, ..., X_T]
+Model inputs: optimizees
+Model outputs: [X_1, X_2, ..., X_T]
+This version of the model now uses two stacked LSTM layers.
 """
 class LSTM(nn.Module):
     def __init__(self,
                  input_dim,
                  hidden_dim,
                  iter_step,
-                 device):
+                 device,
+                 num_layers=2):
         # input_dim: the dimension of model inputs, for example, [X_t, ▽f(X_t)]
         super(LSTM, self).__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.iter_step = iter_step
         self.device = device
+        self.num_layers = num_layers  # Currently hard-coded to 2 in this implementation
 
         # Instantiate a self-attention layer.
         # Here, we assume input_dim equals the concatenated dimension of [y, grad].
         # For a small input_dim (e.g. 2), one head is sufficient.
         self.attention = SelfAttention(embed_dim=input_dim, num_heads=1).to(self.device)
 
-        self.W_i = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device), requires_grad=True)
-        self.U_i = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device), requires_grad=True)
-        self.b_i = nn.Parameter(torch.zeros((hidden_dim), device=self.device, dtype=torch.float32), requires_grad=True)
+        # ----- Layer 1 parameters (LSTM cell operating on the attention output) -----
+        # For layer 1, the input comes directly from the attention output
+        self.W_i_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device))
+        self.U_i_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.b_i_1 = nn.Parameter(torch.zeros(hidden_dim, device=self.device, dtype=torch.float32))
 
-        self.W_f = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device), requires_grad=True)
-        self.U_f = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device), requires_grad=True)
-        self.b_f = nn.Parameter(torch.zeros((hidden_dim), device=self.device, dtype=torch.float32), requires_grad=True)
+        self.W_f_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device))
+        self.U_f_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.b_f_1 = nn.Parameter(torch.zeros(hidden_dim, device=self.device, dtype=torch.float32))
 
-        self.W_o = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device), requires_grad=True)
-        self.U_o = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device), requires_grad=True)
-        self.b_o = nn.Parameter(torch.zeros((hidden_dim), device=self.device, dtype=torch.float32), requires_grad=True)
+        self.W_o_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device))
+        self.U_o_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.b_o_1 = nn.Parameter(torch.zeros(hidden_dim, device=self.device, dtype=torch.float32))
 
-        self.W_u = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device), requires_grad=True)
-        self.U_u = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device), requires_grad=True)
-        self.b_u = nn.Parameter(torch.zeros((hidden_dim), device=self.device, dtype=torch.float32), requires_grad=True)
+        self.W_u_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device))
+        self.U_u_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.b_u_1 = nn.Parameter(torch.zeros(hidden_dim, device=self.device, dtype=torch.float32))
 
-        self.W_h = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, 1), device=self.device), requires_grad=True)
-        self.b_h = nn.Parameter(torch.zeros((1), device=self.device, dtype=torch.float32), requires_grad=True)
+        # ----- Layer 2 parameters (LSTM cell that operates on layer 1’s output) -----
+        # The input to layer 2 now has dimension `hidden_dim`.
+        self.W_i_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.U_i_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.b_i_2 = nn.Parameter(torch.zeros(hidden_dim, device=self.device, dtype=torch.float32))
+
+        self.W_f_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.U_f_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.b_f_2 = nn.Parameter(torch.zeros(hidden_dim, device=self.device, dtype=torch.float32))
+
+        self.W_o_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.U_o_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.b_o_2 = nn.Parameter(torch.zeros(hidden_dim, device=self.device, dtype=torch.float32))
+
+        self.W_u_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.U_u_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
+        self.b_u_2 = nn.Parameter(torch.zeros(hidden_dim, device=self.device, dtype=torch.float32))
+        
+        # ----- Final projection (from second layer hidden state to gradient) -----
+        self.W_h = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, 1), device=self.device))
+        self.b_h = nn.Parameter(torch.zeros(1, device=self.device, dtype=torch.float32))
 
     def name(self):
-        return 'lstm'
+        return 'stacked_lstm'
 
-    def forward(self, data, y, J, F, states=(None, None)):
+    def forward(self, data, y, J, F, states=((None, None), (None, None))):
         """
-        x: [batch_size, num_var, 1]
+        data: an object with methods sub_smooth_grad() and sub_objective()
+        y: initial solution tensor with shape [batch_size, num_var, 1]
+        J, F: additional inputs required for the computations inside data methods
+        states: tuple of tuples containing (H, C) for each layer; default is ((None, None), (None, None))
         """
-        if states[0] is None:
-            H_t = torch.zeros((y.shape[0], y.shape[1], self.hidden_dim), device=self.device)
-        else:
-            H_t = states[0]
+        batch_size, num_var = y.shape[0], y.shape[1]
 
-        if states[1] is None:
-            C_t = torch.zeros((y.shape[0], y.shape[1], self.hidden_dim), device=self.device)
+        # Initialize layer 1 states if not provided.
+        if states[0][0] is None:
+            H1 = torch.zeros((batch_size, num_var, self.hidden_dim), device=self.device)
+            C1 = torch.zeros((batch_size, num_var, self.hidden_dim), device=self.device)
         else:
-            C_t = states[1]
+            H1, C1 = states[0]
+
+        # Initialize layer 2 states if not provided.
+        if states[1][0] is None:
+            H2 = torch.zeros((batch_size, num_var, self.hidden_dim), device=self.device)
+            C2 = torch.zeros((batch_size, num_var, self.hidden_dim), device=self.device)
+        else:
+            H2, C2 = states[1]
 
         final_y = 0.0
         final_loss = 0.0
         losses = []
-        loss0 = 10000
+        loss0 = 10000.0
 
         for iter in range(self.iter_step):
-            grad = data.sub_smooth_grad(y, J, F)
-
-            # Concatenate current solution y and its gradient along the last dimension.
-            inputs = torch.concat((y, grad), dim=-1)  # shape: [batch_size, num_var, input_dim]
+            # Compute the gradient from the original data function.
+            grad_init = data.sub_smooth_grad(y, J, F)
+            # Concatenate current solution and gradient along the last dimension.
+            inputs = torch.concat((y, grad_init), dim=-1)  # [batch_size, num_var, input_dim]
             # Apply self-attention on the inputs.
-            attn_inputs, _ = self.attention(inputs)     # shape remains [batch_size, num_var, input_dim]
+            attn_inputs, _ = self.attention(inputs)         # shape remains [batch_size, num_var, input_dim]
 
-            # Use the attention output for gate computations.
-            I_t = torch.sigmoid(attn_inputs @ self.W_i + H_t @ self.U_i + self.b_i)
-            F_t = torch.sigmoid(attn_inputs @ self.W_f + H_t @ self.U_f + self.b_f)
-            O_t = torch.sigmoid(attn_inputs @ self.W_o + H_t @ self.U_o + self.b_o)
-            U_t = torch.tanh(attn_inputs @ self.W_u + H_t @ self.U_u + self.b_u)
-            C_t = I_t * U_t + F_t * C_t
-            H_t = O_t * torch.tanh(C_t)
-            grad = H_t @ self.W_h + self.b_h
+            # ----- Layer 1 LSTM computations -----
+            I1 = torch.sigmoid(attn_inputs @ self.W_i_1 + H1 @ self.U_i_1 + self.b_i_1)
+            F1 = torch.sigmoid(attn_inputs @ self.W_f_1 + H1 @ self.U_f_1 + self.b_f_1)
+            O1 = torch.sigmoid(attn_inputs @ self.W_o_1 + H1 @ self.U_o_1 + self.b_o_1)
+            U1 = torch.tanh(attn_inputs @ self.W_u_1 + H1 @ self.U_u_1 + self.b_u_1)
+            C1 = I1 * U1 + F1 * C1
+            H1 = O1 * torch.tanh(C1)
+
+            # ----- Layer 2 LSTM computations -----
+            # Layer 2 takes the hidden state output from layer 1 as input.
+            I2 = torch.sigmoid(H1 @ self.W_i_2 + H2 @ self.U_i_2 + self.b_i_2)
+            F2 = torch.sigmoid(H1 @ self.W_f_2 + H2 @ self.U_f_2 + self.b_f_2)
+            O2 = torch.sigmoid(H1 @ self.W_o_2 + H2 @ self.U_o_2 + self.b_o_2)
+            U2 = torch.tanh(H1 @ self.W_u_2 + H2 @ self.U_u_2 + self.b_u_2)
+            C2 = I2 * U2 + F2 * C2
+            H2 = O2 * torch.tanh(C2)
+
+            # ----- Final gradient computation -----
+            grad = H2 @ self.W_h + self.b_h
             y = y - grad
 
             loss = (data.sub_objective(y, J, F).mean()) / self.iter_step

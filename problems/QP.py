@@ -25,13 +25,13 @@ class QP(object):
         A: [batch_size, num_eq, num_var]
         b: [batch_size, num_eq, 1]
     """
-    def __init__(self, prob_type, learning_type, val_frac=0.001, test_frac=0.001, train_frac=0.01, device='cuda:0', seed=17, **kwargs):
+    def __init__(self, prob_type, learning_type, val_frac=0.0833, test_frac=0.0833, device='cuda:0', seed=17, **kwargs):
         super().__init__()
 
         self.device = device
         self.seed = seed
         self.learning_type = learning_type
-        self.train_frac = train_frac
+        self.train_frac = 1 - val_frac - test_frac
         self.val_frac = val_frac
         self.test_frac = test_frac
         self.prob_type = prob_type
@@ -60,7 +60,7 @@ class QP(object):
 
             self.train_size = int(self.data_size * self.train_frac)
             self.val_size = int(self.data_size * val_frac)
-            self.test_size = int(self.data_size * test_frac)
+            self.test_size = self.data_size - self.train_size - self.val_size
 
             self.num_var = data['Q'].shape[1]
             self.num_ineq = data['G'].shape[1]
