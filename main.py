@@ -563,8 +563,8 @@ elif args.test:
 
             HH_condis.append(np.linalg.cond(np.array((test_J[0].T @ test_J[0]).cpu().numpy())))
             # initialization
-            init_y = torch.zeros((test_data.val_size, test_data.num_var + 2 * test_data.num_ineq + test_data.num_eq + test_data.num_lb + test_data.num_ub, 1), device=args.device)
-
+            # init_y = torch.zeros((test_data.val_size, test_data.num_var + 2 * test_data.num_ineq + test_data.num_eq + test_data.num_lb + test_data.num_ub, 1), device=args.device)
+            init_y = torch.zeros((test_data.test_size, test_data.num_var + 2 * test_data.num_ineq + test_data.num_eq + test_data.num_lb + test_data.num_ub, 1), device=args.device)
             #preconditioning
             if args.precondi:
                 test_D_values, D_id = (torch.bmm(test_J.permute(0, 2, 1), test_J)).max(-1)

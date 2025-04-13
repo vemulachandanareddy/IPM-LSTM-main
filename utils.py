@@ -36,6 +36,7 @@ class EarlyStopping(object):
         return self.early_stop
 
     def save_checkpoint(self, model):
+        os.makedirs(os.path.dirname(self.filename), exist_ok=True)
         torch.save(model.state_dict(), self.filename)
 
     def load_checkpoint(self, model):
