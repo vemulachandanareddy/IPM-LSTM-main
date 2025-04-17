@@ -480,10 +480,10 @@ class QP(object):
         y: [batch_size, num_var+num_ineq+num_ineq+num_eq, 1]
         return H^T@H@delta_r+H^T@r
         """
-        print("Inside sub_smooth_grad:")
-        print("J shape:", J.shape)   # Expected to be something like [batch_size, total_dim, total_dim]
-        print("F shape:", F.shape)   # Expected to be [batch_size, total_dim, 1]
-        print("y shape:", y.shape)   # Expected to be [batch_size, total_dim, 1]
+        #print("Inside sub_smooth_grad:")
+       # print("J shape:", J.shape)   # Expected to be something like [batch_size, total_dim, total_dim]
+        #print("F shape:", F.shape)   # Expected to be [batch_size, total_dim, 1]
+       # print("y shape:", y.shape)   # Expected to be [batch_size, total_dim, 1]
         grad = torch.bmm(torch.bmm(J.permute(0, 2, 1), J), y) + torch.bmm(J.permute(0, 2, 1), F)
         return grad
 
