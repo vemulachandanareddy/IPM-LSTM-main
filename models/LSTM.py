@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from models.selfattention import SelfAttention  # Import our self-attention module
+from models.selfattention import SelfAttention  
 
 """
 Model inputs: optimizees
@@ -20,14 +20,11 @@ class LSTM(nn.Module):
         self.hidden_dim = hidden_dim
         self.iter_step = iter_step
         self.device = device
-        self.num_layers = num_layers  # Currently hard-coded to 2 in this implementation
+        self.num_layers = num_layers  
 
-        # Instantiate a self-attention layer.
-        # Here, we assume input_dim equals the concatenated dimension of [y, grad].
-        # For a small input_dim (e.g. 2), one head is sufficient.
+       
         self.attention = SelfAttention(embed_dim=input_dim, num_heads=1).to(self.device)
 
-        # ----- Layer 1 parameters (LSTM cell operating on the attention output) -----
         # For layer 1, the input comes directly from the attention output
         self.W_i_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device))
         self.U_i_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
@@ -44,8 +41,9 @@ class LSTM(nn.Module):
         self.W_u_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(input_dim, hidden_dim), device=self.device))
         self.U_u_1 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
         self.b_u_1 = nn.Parameter(torch.zeros(hidden_dim, device=self.device, dtype=torch.float32))
+        self.dropout = nn.Dropout(p=0.2)
 
-        # ----- Layer 2 parameters (LSTM cell that operates on layer 1’s output) -----
+       
         # The input to layer 2 now has dimension `hidden_dim`.
         self.W_i_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
         self.U_i_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
@@ -63,20 +61,15 @@ class LSTM(nn.Module):
         self.U_u_2 = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, hidden_dim), device=self.device))
         self.b_u_2 = nn.Parameter(torch.zeros(hidden_dim, device=self.device, dtype=torch.float32))
         
-        # ----- Final projection (from second layer hidden state to gradient) -----
         self.W_h = nn.Parameter(torch.normal(mean=0, std=0.01, size=(hidden_dim, 1), device=self.device))
         self.b_h = nn.Parameter(torch.zeros(1, device=self.device, dtype=torch.float32))
+        self.dropout = nn.Dropout(p=0.2)
 
     def name(self):
         return 'stacked_lstm'
 
     def forward(self, data, y, J, F, states=((None, None), (None, None))):
-        """
-        data: an object with methods sub_smooth_grad() and sub_objective()
-        y: initial solution tensor with shape [batch_size, num_var, 1]
-        J, F: additional inputs required for the computations inside data methods
-        states: tuple of tuples containing (H, C) for each layer; default is ((None, None), (None, None))
-        """
+        
         batch_size, num_var = y.shape[0], y.shape[1]
 
         # Initialize layer 1 states if not provided.
